@@ -36,13 +36,25 @@
             }
         }
     }
+
+    NSString * resolvedPath = startPath;
+    if (self.overlayPath
+        && url.pathExtension.length > 0
+        && ![stringToLoad hasPrefix:@"/_app_file_"]) {
+        NSString * overlayCandidate = [self.overlayPath stringByAppendingString:stringToLoad];
+        BOOL isDir = NO;
+        if ([[NSFileManager defaultManager] fileExistsAtPath:overlayCandidate isDirectory:&isDir] && !isDir) {
+            resolvedPath = overlayCandidate;
+        }
+    }
+
     NSError * fileError = nil;
     NSData * data = nil;
     if ([self isMediaExtension:url.pathExtension]) {
-        data = [NSData dataWithContentsOfFile:startPath options:NSDataReadingMappedIfSafe error:&fileError];
+        data = [NSData dataWithContentsOfFile:resolvedPath options:NSDataReadingMappedIfSafe error:&fileError];
     }
     if (!data || fileError) {
-        data =  [[NSData alloc] initWithContentsOfFile:startPath];
+        data =  [[NSData alloc] initWithContentsOfFile:resolvedPath];
     }
     NSInteger statusCode = 200;
     if (!data) {

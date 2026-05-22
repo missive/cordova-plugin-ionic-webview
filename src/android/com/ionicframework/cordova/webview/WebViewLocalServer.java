@@ -24,6 +24,8 @@ import android.webkit.WebResourceResponse;
 
 import org.apache.cordova.ConfigXmlParser;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -49,6 +51,7 @@ import java.util.UUID;
 public class WebViewLocalServer {
   private static String TAG = "WebViewAssetServer";
   private String basePath;
+  private String overlayPath;
   public final static String httpScheme = "http";
   public final static String httpsScheme = "https";
   public final static String fileStart = "/_app_file_";
@@ -294,6 +297,25 @@ public class WebViewLocalServer {
     }
 
     int periodIndex = path.lastIndexOf(".");
+
+    if (overlayPath != null
+        && periodIndex >= 0
+        && !path.startsWith(fileStart)
+        && !path.startsWith(contentStart)) {
+      File overlayFile = new File(overlayPath, path);
+      if (overlayFile.isFile()) {
+        try {
+          InputStream stream = new FileInputStream(overlayFile);
+          String mimeType = getMimeType(path, stream);
+          return createWebResourceResponse(mimeType, handler.getEncoding(),
+                  handler.getStatusCode(), handler.getReasonPhrase(),
+                  handler.getResponseHeaders(), stream);
+        } catch (IOException e) {
+          // fall through to bundle
+        }
+      }
+    }
+
     if (periodIndex >= 0) {
       InputStream responseStream = new LollipopLazyInputStream(handler, uri);
       String mimeType = getMimeType(path, responseStream);
@@ -302,6 +324,10 @@ public class WebViewLocalServer {
     }
 
     return null;
+  }
+
+  public void setOverlayPath(String path) {
+    this.overlayPath = path;
   }
 
   /**

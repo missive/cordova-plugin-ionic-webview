@@ -58,6 +58,23 @@ Example `ionic://app` on iOS, `http://app` on Android.
 If you change it, you'll need to add a new `allow-navigation` entry in the `config.xml` for the configured url (i.e `<allow-navigation href="http://app/*"/>` if `Hostname` is set to `app`).
 This is only needed for the Android url when using `http://`, `https://` or a custom scheme. All `ionic://` urls are whitelisted by the plugin.
 
+#### LiveUpdateOverlay
+
+```xml
+<preference name="LiveUpdateOverlay" value="MissiveLiveUpdate" />
+```
+
+Default value is empty (overlay disabled).
+
+When set, files matching the requested path under
+`<NSApplicationSupportDirectory>/<value>` (iOS) or `<filesDir>/<value>`
+(Android) are served instead of the bundled assets. Missing files fall through
+to the bundle. `index.html` and `/_app_file_/…` requests are always served
+from the bundle.
+
+The value must be a single directory name (no slashes, no `..`). A separate
+plugin is expected to populate that directory; this plugin only reads from it.
+
 ### Android Preferences
 
 Preferences only available Android platform

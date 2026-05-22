@@ -261,6 +261,18 @@
     configuration.userContentController = userContentController;
 
     self.handler = [[IONAssetHandler alloc] initWithBasePath:[self getStartPath] andScheme:scheme];
+
+    NSString * overlayName = [settings cordovaSettingForKey:@"LiveUpdateOverlay"];
+    if (overlayName.length > 0
+        && ![overlayName containsString:@"/"]
+        && ![overlayName containsString:@".."]) {
+        NSURL * appSupport = [[[NSFileManager defaultManager]
+            URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] firstObject];
+        NSURL * overlayURL = [appSupport URLByAppendingPathComponent:overlayName isDirectory:YES];
+        self.handler.overlayPath = overlayURL.path;
+        NSLog(@"CDVWKWebViewEngine: LiveUpdate overlay enabled at %@", overlayURL.path);
+    }
+
     [configuration setURLSchemeHandler:self.handler forURLScheme:scheme];
 
     // re-create WKWebView, since we need to update configuration
