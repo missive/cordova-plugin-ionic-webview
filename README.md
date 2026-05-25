@@ -69,8 +69,9 @@ Default value is empty (overlay disabled).
 When set, files matching the requested path under
 `<NSApplicationSupportDirectory>/<value>` (iOS) or `<filesDir>/<value>`
 (Android) are served instead of the bundled assets. Missing files fall through
-to the bundle. `index.html` and `/_app_file_/…` requests are always served
-from the bundle.
+to the bundle. `index.html` and Cordova's internal-scheme paths
+(`/_app_file_/…`, plus `/_app_content_/…` on Android) are always served from
+the bundle.
 
 The value must be a single directory name (no slashes, no `..`). A separate
 plugin is expected to populate that directory; this plugin only reads from it.

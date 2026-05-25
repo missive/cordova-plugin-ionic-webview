@@ -298,21 +298,15 @@ public class WebViewLocalServer {
 
     int periodIndex = path.lastIndexOf(".");
 
-    if (overlayPath != null
-        && periodIndex >= 0
-        && !path.startsWith(fileStart)
-        && !path.startsWith(contentStart)) {
-      File overlayFile = new File(overlayPath, path);
-      if (overlayFile.isFile()) {
-        try {
-          InputStream stream = new FileInputStream(overlayFile);
-          String mimeType = getMimeType(path, stream);
-          return createWebResourceResponse(mimeType, handler.getEncoding(),
-                  handler.getStatusCode(), handler.getReasonPhrase(),
-                  handler.getResponseHeaders(), stream);
-        } catch (IOException e) {
-          // fall through to bundle
-        }
+    if (overlayPath != null && periodIndex >= 0 && !path.equals("/index.html")) {
+      try {
+        InputStream stream = new FileInputStream(new File(overlayPath, path));
+        String mimeType = getMimeType(path, stream);
+        return createWebResourceResponse(mimeType, handler.getEncoding(),
+                handler.getStatusCode(), handler.getReasonPhrase(),
+                handler.getResponseHeaders(), stream);
+      } catch (IOException e) {
+        // overlay miss; fall through to the bundle branch below
       }
     }
 

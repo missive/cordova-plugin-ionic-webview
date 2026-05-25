@@ -37,24 +37,30 @@
         }
     }
 
-    NSString * resolvedPath = startPath;
+    NSError * fileError = nil;
+    NSData * data = nil;
+    BOOL isMedia = [self isMediaExtension:url.pathExtension];
+
     if (self.overlayPath
         && url.pathExtension.length > 0
-        && ![stringToLoad hasPrefix:@"/_app_file_"]) {
+        && ![stringToLoad hasPrefix:@"/_app_file_"]
+        && ![stringToLoad isEqualToString:@"/index.html"]) {
         NSString * overlayCandidate = [self.overlayPath stringByAppendingString:stringToLoad];
-        BOOL isDir = NO;
-        if ([[NSFileManager defaultManager] fileExistsAtPath:overlayCandidate isDirectory:&isDir] && !isDir) {
-            resolvedPath = overlayCandidate;
+        if (isMedia) {
+            data = [NSData dataWithContentsOfFile:overlayCandidate options:NSDataReadingMappedIfSafe error:NULL];
+        }
+        if (!data) {
+            data = [[NSData alloc] initWithContentsOfFile:overlayCandidate];
         }
     }
 
-    NSError * fileError = nil;
-    NSData * data = nil;
-    if ([self isMediaExtension:url.pathExtension]) {
-        data = [NSData dataWithContentsOfFile:resolvedPath options:NSDataReadingMappedIfSafe error:&fileError];
-    }
-    if (!data || fileError) {
-        data =  [[NSData alloc] initWithContentsOfFile:resolvedPath];
+    if (!data) {
+        if (isMedia) {
+            data = [NSData dataWithContentsOfFile:startPath options:NSDataReadingMappedIfSafe error:&fileError];
+        }
+        if (!data || fileError) {
+            data = [[NSData alloc] initWithContentsOfFile:startPath];
+        }
     }
     NSInteger statusCode = 200;
     if (!data) {

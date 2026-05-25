@@ -266,11 +266,10 @@
     if (overlayName.length > 0
         && ![overlayName containsString:@"/"]
         && ![overlayName containsString:@".."]) {
-        NSURL * appSupport = [[[NSFileManager defaultManager]
-            URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] firstObject];
-        NSURL * overlayURL = [appSupport URLByAppendingPathComponent:overlayName isDirectory:YES];
-        self.handler.overlayPath = overlayURL.path;
-        NSLog(@"CDVWKWebViewEngine: LiveUpdate overlay enabled at %@", overlayURL.path);
+        NSString * appSupport = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject];
+        NSString * overlayPath = [appSupport stringByAppendingPathComponent:overlayName];
+        self.handler.overlayPath = overlayPath;
+        NSLog(@"CDVWKWebViewEngine: LiveUpdate overlay enabled at %@", overlayPath);
     }
 
     [configuration setURLSchemeHandler:self.handler forURLScheme:scheme];
