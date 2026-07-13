@@ -36,13 +36,31 @@
             }
         }
     }
+
     NSError * fileError = nil;
     NSData * data = nil;
-    if ([self isMediaExtension:url.pathExtension]) {
-        data = [NSData dataWithContentsOfFile:startPath options:NSDataReadingMappedIfSafe error:&fileError];
+    BOOL isMedia = [self isMediaExtension:url.pathExtension];
+
+    if (self.overlayPath
+        && url.pathExtension.length > 0
+        && ![stringToLoad hasPrefix:@"/_app_file_"]
+        && ![stringToLoad isEqualToString:@"/index.html"]) {
+        NSString * overlayCandidate = [self.overlayPath stringByAppendingString:stringToLoad];
+        if (isMedia) {
+            data = [NSData dataWithContentsOfFile:overlayCandidate options:NSDataReadingMappedIfSafe error:NULL];
+        }
+        if (!data) {
+            data = [[NSData alloc] initWithContentsOfFile:overlayCandidate];
+        }
     }
-    if (!data || fileError) {
-        data =  [[NSData alloc] initWithContentsOfFile:startPath];
+
+    if (!data) {
+        if (isMedia) {
+            data = [NSData dataWithContentsOfFile:startPath options:NSDataReadingMappedIfSafe error:&fileError];
+        }
+        if (!data || fileError) {
+            data = [[NSData alloc] initWithContentsOfFile:startPath];
+        }
     }
     NSInteger statusCode = 200;
     if (!data) {

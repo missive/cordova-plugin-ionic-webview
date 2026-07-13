@@ -26,6 +26,8 @@ import org.apache.cordova.engine.SystemWebViewClient;
 import org.apache.cordova.engine.SystemWebViewEngine;
 import org.apache.cordova.engine.SystemWebView;
 
+import java.io.File;
+
 public class IonicWebViewEngine extends SystemWebViewEngine {
   public static final String TAG = "IonicWebViewEngine";
 
@@ -66,6 +68,16 @@ public class IonicWebViewEngine extends SystemWebViewEngine {
 
     localServer = new WebViewLocalServer(cordova.getActivity(), hostname, true, parser, scheme);
     localServer.hostAssets("www");
+
+    String overlayName = preferences.getString("LiveUpdateOverlay", null);
+    if (overlayName != null
+        && !overlayName.isEmpty()
+        && !overlayName.contains("/")
+        && !overlayName.contains("..")) {
+      File overlayDir = new File(cordova.getActivity().getFilesDir(), overlayName);
+      localServer.setOverlayPath(overlayDir.getAbsolutePath());
+      Log.d(TAG, "LiveUpdate overlay enabled at " + overlayDir.getAbsolutePath());
+    }
 
     webView.setWebViewClient(new ServerClient(this, parser));
 
