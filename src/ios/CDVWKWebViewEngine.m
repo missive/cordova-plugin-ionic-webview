@@ -310,7 +310,7 @@
     if ([settings cordovaBoolSettingForKey:@"KeyboardAppearanceDark" defaultValue:NO]) {
         [self setKeyboardAppearanceDark];
     }
-    
+
     #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 160400
         // With the introduction of iOS 16.4 the webview is no longer inspectable by default.
         // We'll honor that change for release builds, but will still allow inspection on debug builds by default.
@@ -324,6 +324,7 @@
             wkWebView.inspectable = [settings cordovaBoolSettingForKey:@"InspectableWebview" defaultValue:allowWebviewInspectionDefault];
         }
     #endif
+
     [self updateSettings:settings];
 
     // check if content thread has died on resume
