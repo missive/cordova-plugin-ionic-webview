@@ -48,7 +48,7 @@
 
     [alert addAction:ok];
 
-    UIViewController* rootController = [UIApplication sharedApplication].delegate.window.rootViewController;
+    UIViewController* rootController = webView.window.rootViewController;
 
     [rootController presentViewController:alert animated:YES completion:nil];
 }
@@ -79,7 +79,7 @@
         }];
     [alert addAction:cancel];
 
-    UIViewController* rootController = [UIApplication sharedApplication].delegate.window.rootViewController;
+    UIViewController* rootController = webView.window.rootViewController;
 
     [rootController presentViewController:alert animated:YES completion:nil];
 }
@@ -115,7 +115,7 @@
         textField.text = defaultText;
     }];
 
-    UIViewController* rootController = [UIApplication sharedApplication].delegate.window.rootViewController;
+    UIViewController* rootController = webView.window.rootViewController;
 
     [rootController presentViewController:alert animated:YES completion:nil];
 }
