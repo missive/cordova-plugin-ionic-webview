@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.content.pm.ProviderInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 import android.webkit.ServiceWorkerController;
 import android.webkit.ServiceWorkerClient;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -22,9 +25,13 @@ import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaWebViewEngine;
 import org.apache.cordova.NativeToJsMessageQueue;
 import org.apache.cordova.PluginManager;
+import org.apache.cordova.engine.SystemWebChromeClient;
 import org.apache.cordova.engine.SystemWebViewClient;
 import org.apache.cordova.engine.SystemWebViewEngine;
 import org.apache.cordova.engine.SystemWebView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class IonicWebViewEngine extends SystemWebViewEngine {
   public static final String TAG = "IonicWebViewEngine";
@@ -70,6 +77,7 @@ public class IonicWebViewEngine extends SystemWebViewEngine {
     webView.setWebViewClient(new ServerClient(this, parser));
 
     super.init(parentWebView, cordova, client, resourceApi, pluginManager, nativeToJsMessageQueue);
+    webView.setWebChromeClient(new ChooserClient(this));
     if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       final WebSettings settings = webView.getSettings();
       int mode = preferences.getInteger("MixedContentMode", 0);
@@ -159,6 +167,57 @@ public class IonicWebViewEngine extends SystemWebViewEngine {
               "window.WEBVIEW_SERVER_URL = '" + CDV_LOCAL_SERVER + "';" +
               "})()");
     }
+  }
+
+  private class ChooserClient extends SystemWebChromeClient {
+    public ChooserClient(SystemWebViewEngine parentEngine) {
+      super(parentEngine);
+    }
+
+    @Override
+    public boolean onShowFileChooser(WebView view, final ValueCallback<Uri[]> filePathsCallback,
+                                     final WebChromeClient.FileChooserParams fileChooserParams) {
+      final Context context = view.getContext();
+      return super.onShowFileChooser(view, uris -> filePathsCallback.onReceiveValue(filterChooserUris(context, uris)), fileChooserParams);
+    }
+  }
+
+  static Uri[] filterChooserUris(Context context, Uri[] uris) {
+    if (uris == null) {
+      return null;
+    }
+
+    List<Uri> allowed = new ArrayList<>();
+    for (Uri uri : uris) {
+      if (isAllowedChooserUri(context, uri)) {
+        allowed.add(uri);
+      } else {
+        Log.w(TAG, "Rejected file chooser URI: " + uri);
+      }
+    }
+
+    return allowed.isEmpty() ? null : allowed.toArray(new Uri[0]);
+  }
+
+  static boolean isAllowedChooserUri(Context context, Uri uri) {
+    if (uri == null || !"content".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null) {
+      return false;
+    }
+
+    String packageName = context.getPackageName();
+    ProviderInfo provider = context.getPackageManager().resolveContentProvider(uri.getHost(), 0);
+    if (provider == null || !packageName.equals(provider.packageName)) {
+      return true;
+    }
+
+    return isCameraCaptureUri(packageName, uri);
+  }
+
+  static boolean isCameraCaptureUri(String packageName, Uri uri) {
+    String path = uri.getEncodedPath();
+    return (packageName + ".cdv.core.file.provider").equals(uri.getAuthority())
+      && path != null
+      && path.matches("/cache/temp-?[0-9]+\\.jpg");
   }
 
   public void setServerBasePath(String path) {
